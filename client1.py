@@ -1,6 +1,7 @@
 import socket
 import os
 import struct
+import json
 
 def main():
     client_socket = socket.socket()
@@ -22,13 +23,9 @@ def main():
             break
         result_data += tmp
 
+    print(result_data)  # содержание корневой директории в формате json объекта
 
     client_socket.close()
-
-    print(result_data)  # содержание директории в формате json объекта
-    # Вывод: [{"Path": "C:\\Users\\danya\\Downloads\\Folder\\book.txt", "Last modified": "29.02.24 19:21:13",
-    # "Size": "11424 bytes", "Object type": " File"}, {"Path": "C:\\ .......}]
-
 
 if __name__ == '__main__':
     main()
