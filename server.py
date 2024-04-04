@@ -80,6 +80,44 @@ async def handle_client1(reader: StreamReader, writer: StreamWriter):
     await writer.drain()
     await writer.wait_closed()
 
+async def handle_client2(reader: StreamReader, writer: StreamWriter):
+    while True:
+        request = (await reader.read(1024)).decode()
+        if request.lower() == "exit":
+            break
+        elif request.lower() == "start":
+            create_folders(programs)
+            run_programs(programs)
+            write_to_json(programs)
+            response = "Директории созданы и программы запущены."
+        elif "add" in request:
+            command = request.split("add ")[-1]
+            if command not in programs:
+                programs.append(command)
+                create_folders([command])
+                run_programs([command])
+                write_to_json(programs)
+                response = f"Команда '{command}' успешно добавлена."
+        elif "get_file" in request:
+            file_name = request.split("get_file ")[-1]
+            for program in programs:
+                if file_name.lower() in program.lower():
+                    folder_name = program
+                    file_name = f"{folder_name}/output.txt"
+                    with open(file_name, "r") as file:
+                        response = file.read()
+                    break
+            else:
+                response = "Файл не найден."
+        elif "directory" in request:
+            response = json.dumps(traversal(os.getcwd())).encode()
+        else:
+            response = "Неизвестная команда."
+        writer.write(struct.pack('I', len(response)))
+        await writer.drain()
+        writer.write(response.encode())
+        await writer.drain()
+    await writer.wait_closed()
 
 async def start_server():
     server_socket1 = await asyncio.start_server(handle_client1, "localhost", 9090)
